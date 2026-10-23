@@ -1,0 +1,39 @@
+// News portal — two-brand Bengali news sites (প্রথম প্রহর নিউজ / BTN News)
+// Shares the Supabase project with protarok-check; tables are prefixed by
+// model name only (NewsPost / PostImage) and created via add_news_portal.sql.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// One published news story on one brand's site.
+/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News)
+model NewsPost {
+  id          Int      @id @default(autoincrement())
+  brand       String // pp | btn
+  headline    String
+  category    String   @default("জাতীয়")
+  views       Int      @default(0)
+  body        String // full details text (from the বিস্তারিত comment)
+  imageId     Int? // -> PostImage.id (the branded card image)
+  sourceFbid  String // Facebook post/photo id it came from (dedupe key)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@unique([brand, sourceFbid])
+  @@index([brand, publishedAt])
+  @@index([brand, category, publishedAt])
+  @@index([brand, views])
+}
+
+/// Card images stored in Postgres (Supabase free tier is fine for v1).
+model PostImage {
+  id   Int    @id @default(autoincrement())
+  data Bytes
+  mime String @default("image/png")
+}
