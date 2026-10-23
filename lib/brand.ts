@@ -36,7 +36,7 @@ export const BRANDS: Record<BrandKey, Brand> = {
       "BTN News — বাংলা টেলিভিশন নেটওয়ার্ক। দেশজুড়ে ঘটে যাওয়া গুরুত্বপূর্ণ সব খবর ও ব্রেকিং আপডেট সবার আগে।",
     fbPageUrl: "https://www.facebook.com/profile.php?id=61595222201559",
     themeColor: "#081527",
-    gaId: "",
+    gaId: "G-LSLLKTZ83C",
   },
 };
 
