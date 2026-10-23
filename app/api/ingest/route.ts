@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import webpush from "web-push";
 import { prisma } from "@/lib/db";
 import { CATEGORIES, DEFAULT_CATEGORY } from "@/lib/categories";
+import { getBaseUrl } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -66,8 +68,61 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true },
     });
+
+    // Notify this brand's push subscribers about the new story. Fail-soft:
+    // a push problem must never fail the ingest itself.
+    await sendPushToBrand(brand, {
+      title: headline,
+      body: (body || headline).slice(0, 120),
+      url: `${getBaseUrl()}/post/${post.id}`,
+      icon: imageId ? `${getBaseUrl()}/img/${imageId}` : undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ ok: true, id: post.id, path: `/post/${post.id}` });
   } catch (e) {
     return NextResponse.json({ ok: false, error: "db error" }, { status: 500 });
   }
+}
+
+// Sends one Web Push payload to every subscriber of the brand. Dead
+// endpoints (404/410 from the push service) are removed from the table.
+async function sendPushToBrand(
+  brand: string,
+  payload: { title: string; body: string; url: string; icon?: string }
+) {
+  const row = await prisma.pushConfig.findUnique({ where: { key: "vapid" } });
+  if (!row) return; // setup endpoint has not run yet — nothing to send with.
+  const { publicKey, privateKey } = JSON.parse(row.value) as {
+    publicKey: string;
+    privateKey: string;
+  };
+  webpush.setVapidDetails(
+    "mailto:sowrobhasanrana39@gmail.com",
+    publicKey,
+    privateKey
+  );
+
+  const subs = await prisma.pushSubscription.findMany({
+    where: { brand },
+    take: 1000,
+  });
+  if (subs.length === 0) return;
+
+  const data = JSON.stringify(payload);
+  await Promise.allSettled(
+    subs.map(async (s: (typeof subs)[number]) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          data
+        );
+      } catch (err: any) {
+        if (err?.statusCode === 404 || err?.statusCode === 410) {
+          await prisma.pushSubscription
+            .delete({ where: { id: s.id } })
+            .catch(() => {});
+        }
+      }
+    })
+  );
 }
