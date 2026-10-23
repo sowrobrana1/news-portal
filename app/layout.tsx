@@ -21,11 +21,9 @@ export const metadata: Metadata = {
     locale: "bn_BD",
     siteName: brand.name,
   },
-  // Google Search Console ownership verification (per brand).
-  verification:
-    brand.key === "pp"
-      ? { google: "R6oj57uHxgAtAsGjAdqpzDibrLOnYhIVtBf_gWmi1fQ" }
-      : undefined,
+  // Google Search Console ownership verification. Google issued the same
+  // token for both properties (same account) — value kept for both brands.
+  verification: { google: "R6oj57uHxgAtAsGjAdqpzDibrLOnYhIVtBf_gWmi1fQ" },
 };
 
 async function latestHeadlines(): Promise<{ id: number; headline: string }[]> {
