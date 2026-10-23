@@ -68,6 +68,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ ok: true, id: post.id, path: `/post/${post.id}` });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: "db error", detail: String((e as Error)?.message || e).slice(0, 400) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "db error" }, { status: 500 });
   }
 }
