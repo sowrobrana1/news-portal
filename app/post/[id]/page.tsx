@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getBrand, getBaseUrl } from "@/lib/brand";
 import { slugForCategory } from "@/lib/categories";
 import { timeAgoBn, dateBn, timeBn } from "@/lib/format";
+import type { PostCardItem } from "@/lib/format";
 import NewsCard from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
 import ShareButtons from "./ShareButtons";
@@ -53,7 +54,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
     .update({ where: { id: post.id }, data: { views: { increment: 1 } } })
     .catch(() => {});
 
-  let related: Awaited<ReturnType<typeof prisma.newsPost.findMany>> = [];
+  let related: PostCardItem[] = [];
   let prev: { id: number; headline: string } | null = null;
   let next: { id: number; headline: string } | null = null;
   try {
