@@ -58,6 +58,9 @@ export default function AdminPage() {
         setAuthed(true);
         setMsg("");
         sessionStorage.setItem("np_admin_pw", password);
+        // Mark this browser as admin so the admin's own article visits are
+        // not counted in the পঠিত (views) numbers.
+        document.cookie = "np_admin=1; path=/; max-age=31536000; SameSite=Lax";
         const s = await call({ action: "stats", brand: b }, password);
         if (s.ok) setStats(s);
       } else {
