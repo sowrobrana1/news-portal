@@ -35,3 +35,11 @@ export function timeBn(date: Date): string {
     minute: "2-digit",
   });
 }
+
+export type PostCardItem = {
+  id: number;
+  headline: string;
+  category: string;
+  imageId: number | null;
+  publishedAt: Date;
+};
