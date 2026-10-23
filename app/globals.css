@@ -199,6 +199,9 @@ footer .copy { border-top: 1px solid rgba(255,255,255,.15); padding: 14px 0 20px
 /* ── Admin ── */
 .adminbox { max-width: 860px; margin: 0 auto; }
 .adminbox input[type="password"] { min-height: 48px; border: 1.5px solid var(--line); border-radius: 8px; padding: 0 14px; font: inherit; width: 100%; max-width: 340px; }
+.adminbox input[type="text"], .adminbox textarea, .adminbox select { border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; background: #fff; }
+.adminbox textarea { line-height: 1.6; resize: vertical; }
+.adminbox input[type="file"] { font: inherit; }
 .btn { min-height: 44px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
 .btn.ghost { background: var(--bg-soft); color: var(--ink); border: 1px solid var(--line); }
 .btn.danger { background: #fff; color: #c01616; border: 1px solid #e5b4b4; }
