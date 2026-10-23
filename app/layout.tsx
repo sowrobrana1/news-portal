@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { dateBn } from "@/lib/format";
 import { prisma } from "@/lib/db";
 import PushButton from "@/components/PushButton";
+import Script from "next/script";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
         <meta name="theme-color" content={brand.themeColor} />
+        {brand.gaId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${brand.gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${brand.gaId}');`}
+            </Script>
+          </>
+        ) : null}
       </head>
       <body>
         <header className="masthead">
