@@ -37,3 +37,22 @@ model PostImage {
   data Bytes
   mime String @default("image/png")
 }
+
+/// One browser Web Push subscription for one brand's site.
+/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News)
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  brand     String // pp | btn
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([brand])
+}
+
+/// Small key/value store for server config (e.g. the shared VAPID key pair).
+model PushConfig {
+  key   String @id
+  value String
+}
