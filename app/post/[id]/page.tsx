@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { getBrand, getBaseUrl } from "@/lib/brand";
 import { slugForCategory } from "@/lib/categories";
@@ -49,10 +50,14 @@ export default async function PostPage({ params }: { params: { id: string } }) {
   const post = await getPost(id);
   if (!post) notFound();
 
-  // Count the read (fail-soft).
-  prisma.newsPost
-    .update({ where: { id: post.id }, data: { views: { increment: 1 } } })
-    .catch(() => {});
+  // Count the read (fail-soft) — but never count the admin's own visits:
+  // the /admin panel sets an "np_admin" cookie on the browser used to log in.
+  const isAdmin = !!cookies().get("np_admin");
+  if (!isAdmin) {
+    prisma.newsPost
+      .update({ where: { id: post.id }, data: { views: { increment: 1 } } })
+      .catch(() => {});
+  }
 
   let related: PostCardItem[] = [];
   let prev: { id: number; headline: string } | null = null;
