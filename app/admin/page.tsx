@@ -11,6 +11,15 @@ interface Row {
   sourceFbid: string;
 }
 
+interface Stats {
+  totalPosts: number;
+  totalViews: number;
+  todayPosts: number;
+  top: { id: number; headline: string; views: number }[];
+}
+
+const CATS = ["জাতীয়", "রাজনীতি", "আন্তর্জাতিক", "খেলা", "বিনোদন", "অর্থনীতি", "প্রযুক্তি", "জেলা"];
+
 const BN = "০১২৩৪৫৬৭৮৯";
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => BN[Number(d)]);
 
@@ -19,19 +28,27 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [brand, setBrand] = useState<"pp" | "btn">("pp");
   const [rows, setRows] = useState<Row[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [msg, setMsg] = useState("");
 
-  const call = useCallback(
-    async (body: object, password: string) => {
-      const r = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-password": password },
-        body: JSON.stringify(body),
-      });
-      return r.json();
-    },
-    []
-  );
+  // New-post form state
+  const [headline, setHeadline] = useState("");
+  const [category, setCategory] = useState(CATS[0]);
+  const [body, setBody] = useState("");
+  const [imgB64, setImgB64] = useState<string>("");
+  const [imgMime, setImgMime] = useState<string>("image/png");
+  const [imgName, setImgName] = useState<string>("");
+  const [posting, setPosting] = useState(false);
+  const [okMsg, setOkMsg] = useState("");
+
+  const call = useCallback(async (payload: object, password: string) => {
+    const r = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-password": password },
+      body: JSON.stringify(payload),
+    });
+    return r.json();
+  }, []);
 
   const load = useCallback(
     async (password: string, b: "pp" | "btn") => {
@@ -41,6 +58,8 @@ export default function AdminPage() {
         setAuthed(true);
         setMsg("");
         sessionStorage.setItem("np_admin_pw", password);
+        const s = await call({ action: "stats", brand: b }, password);
+        if (s.ok) setStats(s);
       } else {
         setAuthed(false);
         setMsg("পাসওয়ার্ড মেলেনি। আবার চেষ্টা করুন।");
@@ -63,6 +82,56 @@ export default function AdminPage() {
     const r = await call({ action: "delete", id }, pw);
     if (r.ok) load(pw, brand);
     else setMsg("মুছতে সমস্যা হয়েছে।");
+  }
+
+  function pickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) {
+      setImgB64("");
+      setImgName("");
+      return;
+    }
+    if (f.size > 3 * 1024 * 1024) {
+      setMsg("ছবি ৩ MB-এর বেশি বড়। ছোট ছবি দিন।");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const s = String(reader.result || "");
+      const comma = s.indexOf(",");
+      setImgB64(comma >= 0 ? s.slice(comma + 1) : s);
+      setImgMime(f.type || "image/png");
+      setImgName(f.name);
+    };
+    reader.readAsDataURL(f);
+  }
+
+  async function createPost(e: React.FormEvent) {
+    e.preventDefault();
+    if (!headline.trim()) {
+      setMsg("শিরোনাম দিন।");
+      return;
+    }
+    setPosting(true);
+    setOkMsg("");
+    setMsg("");
+    const payload: any = { action: "create", brand, headline, category, body };
+    if (imgB64) {
+      payload.imageBase64 = imgB64;
+      payload.mime = imgMime;
+    }
+    const r = await call(payload, pw);
+    setPosting(false);
+    if (r.ok) {
+      setOkMsg(`পোস্ট হয়ে গেছে ✓ — /post/${r.id}`);
+      setHeadline("");
+      setBody("");
+      setImgB64("");
+      setImgName("");
+      load(pw, brand);
+    } else {
+      setMsg("পোস্ট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    }
   }
 
   if (!authed) {
@@ -105,6 +174,83 @@ export default function AdminPage() {
         </button>
         <span style={{ alignSelf: "center", color: "var(--muted)" }}>মোট {bn(rows.length)}টি খবর</span>
       </div>
+
+      {stats && (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
+          <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.totalPosts)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>মোট খবর</div>
+          </div>
+          <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.totalViews)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>মোট পঠিত (সব খবর মিলিয়ে)</div>
+          </div>
+          <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.todayPosts)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>আজকের খবর</div>
+          </div>
+        </div>
+      )}
+
+      {stats && stats.top.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 17, margin: "0 0 8px" }}>সর্বাধিক পঠিত (শীর্ষ ৫)</h2>
+          <ol style={{ margin: 0, paddingLeft: 22, lineHeight: 1.9 }}>
+            {stats.top.map((t) => (
+              <li key={t.id}>
+                <a href={`/post/${t.id}`} target="_blank" rel="noreferrer">
+                  {t.headline}
+                </a>{" "}
+                <span style={{ color: "var(--muted)" }}>— {bn(t.views)} বার পঠিত</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      <div style={{ border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "14px 16px", marginBottom: 22 }}>
+        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>নতুন পোস্ট করুন</h2>
+        <form onSubmit={createPost} style={{ display: "grid", gap: 10 }}>
+          <input
+            type="text"
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            placeholder="শিরোনাম"
+            style={{ width: "100%" }}
+          />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              {CATS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <label style={{ alignSelf: "center" }}>
+              ছবি (ঐচ্ছিক):{" "}
+              <input type="file" accept="image/*" onChange={pickImage} />
+              {imgName && <span style={{ color: "var(--muted)" }}> {imgName}</span>}
+            </label>
+          </div>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="বিস্তারিত লিখুন…"
+            rows={6}
+            style={{ width: "100%" }}
+          />
+          <div>
+            <button className="btn" type="submit" disabled={posting}>
+              {posting ? "পোস্ট হচ্ছে…" : "পোস্ট করুন"}
+            </button>
+            <span style={{ marginLeft: 10, color: "var(--muted)", fontSize: 13 }}>
+              পোস্ট যাবে: {brand === "pp" ? "প্রথম প্রহর নিউজ" : "BTN News"} সাইটে
+            </span>
+          </div>
+        </form>
+        {okMsg && <p style={{ color: "#0a7d2c" }}>{okMsg}</p>}
+      </div>
+
       {msg && <p style={{ color: "#c01616" }}>{msg}</p>}
       <div style={{ overflowX: "auto" }}>
         <table className="admin">
