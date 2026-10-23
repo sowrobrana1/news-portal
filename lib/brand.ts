@@ -11,6 +11,8 @@ export interface Brand {
   description: string;
   fbPageUrl: string;
   themeColor: string;
+  // Google Analytics 4 Measurement ID ("" = analytics off for this brand).
+  gaId: string;
 }
 
 export const BRANDS: Record<BrandKey, Brand> = {
@@ -23,6 +25,7 @@ export const BRANDS: Record<BrandKey, Brand> = {
       "প্রথম প্রহর নিউজ — দেশ-বিদেশের সর্বশেষ খবর সবার আগে। রাজনীতি, খেলা, অর্থনীতি, বিনোদনসহ সব আপডেট এক ঠিকানায়।",
     fbPageUrl: "https://www.facebook.com/profile.php?id=61580723216967",
     themeColor: "#0c0c0f",
+    gaId: "G-6SG6Q0DT5B",
   },
   btn: {
     key: "btn",
@@ -33,6 +36,7 @@ export const BRANDS: Record<BrandKey, Brand> = {
       "BTN News — বাংলা টেলিভিশন নেটওয়ার্ক। দেশজুড়ে ঘটে যাওয়া গুরুত্বপূর্ণ সব খবর ও ব্রেকিং আপডেট সবার আগে।",
     fbPageUrl: "https://www.facebook.com/profile.php?id=61595222201559",
     themeColor: "#081527",
+    gaId: "",
   },
 };
 
