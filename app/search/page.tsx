@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getBrand } from "@/lib/brand";
+import type { PostCardItem } from "@/lib/format";
 import NewsCard from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
 
@@ -24,7 +25,7 @@ export default async function SearchPage({
   const brand = getBrand();
   const q = (searchParams.q || "").trim();
 
-  let results: Awaited<ReturnType<typeof prisma.newsPost.findMany>> = [];
+  let results: PostCardItem[] = [];
   if (q) {
     const variants = digitVariants(q);
     try {
