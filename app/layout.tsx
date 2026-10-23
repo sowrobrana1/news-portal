@@ -5,6 +5,7 @@ import { getBrand, getBaseUrl } from "@/lib/brand";
 import { CATEGORIES } from "@/lib/categories";
 import { dateBn } from "@/lib/format";
 import { prisma } from "@/lib/db";
+import PushButton from "@/components/PushButton";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <span className="spacer" />
             <span className="datebox">{today}</span>
+            <PushButton />
             <Link href="/search" className="iconbtn" aria-label="খুঁজুন">
               🔍
             </Link>
