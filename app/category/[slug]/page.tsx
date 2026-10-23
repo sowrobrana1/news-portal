@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getBrand } from "@/lib/brand";
 import { categoryBySlug } from "@/lib/categories";
+import type { PostCardItem } from "@/lib/format";
 import NewsCard from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
 
@@ -23,7 +24,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   const cat = categoryBySlug(params.slug);
   if (!cat) notFound();
 
-  let posts: Awaited<ReturnType<typeof prisma.newsPost.findMany>> = [];
+  let posts: PostCardItem[] = [];
   try {
     posts = await prisma.newsPost.findMany({
       where: { brand: brand.key, category: cat.name },
