@@ -86,10 +86,32 @@ export default async function PostPage({ params }: { params: { id: string } }) {
   }
 
   const published = new Date(post.publishedAt);
-  const url = `${getBaseUrl()}/post/${post.id}`;
+  const base = getBaseUrl();
+  const url = `${base}/post/${post.id}`;
+
+  // NewsArticle structured data — helps Google understand each story
+  // (News / Discover eligibility, richer results).
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: post.headline,
+    description: post.body.replace(/\s+/g, " ").slice(0, 200),
+    datePublished: published.toISOString(),
+    dateModified: published.toISOString(),
+    inLanguage: "bn",
+    articleSection: post.category,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    author: { "@type": "Organization", name: brand.name, url: base },
+    publisher: { "@type": "Organization", name: brand.name, url: base },
+    ...(post.imageId ? { image: [`${base}/img/${post.imageId}`] } : {}),
+  };
 
   return (
     <div className="layout">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <article>
         <nav className="crumbs" aria-label="ব্রেডক্রাম্ব">
           <Link href="/">প্রচ্ছদ</Link>
