@@ -5,7 +5,8 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { getBrand, getBaseUrl } from "@/lib/brand";
 import { slugForCategory } from "@/lib/categories";
-import { timeAgoBn, dateBn, timeBn } from "@/lib/format";
+import AdSlot from "@/components/AdSlot";
+import { timeAgoFor, dateFor, timeBn, timeEn } from "@/lib/format";
 import type { PostCardItem } from "@/lib/format";
 import NewsCard from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
@@ -25,7 +26,7 @@ async function getPost(id: number) {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const brand = getBrand();
   const post = await getPost(Number(params.id));
-  if (!post) return { title: "খবর পাওয়া যায়নি" };
+  if (!post) return { title: brand.lang === "en" ? "News not found" : "খবর পাওয়া যায়নি" };
   const desc = post.body.replace(/\s+/g, " ").slice(0, 160);
   const images = post.imageId ? [`${getBaseUrl()}/img/${post.imageId}`] : [];
   return {
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title: post.headline,
       description: desc,
       type: "article",
-      locale: "bn_BD",
+      locale: brand.locale,
       siteName: brand.name,
       images,
       publishedTime: new Date(post.publishedAt).toISOString(),
@@ -46,6 +47,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
 export default async function PostPage({ params }: { params: { id: string } }) {
   const brand = getBrand();
+  const isEn = brand.lang === "en";
   const id = Number(params.id);
   const post = await getPost(id);
   if (!post) notFound();
@@ -98,7 +100,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
     description: post.body.replace(/\s+/g, " ").slice(0, 200),
     datePublished: published.toISOString(),
     dateModified: published.toISOString(),
-    inLanguage: "bn",
+    inLanguage: brand.lang,
     articleSection: post.category,
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     author: { "@type": "Organization", name: brand.name, url: base },
@@ -113,12 +115,12 @@ export default async function PostPage({ params }: { params: { id: string } }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <article>
-        <nav className="crumbs" aria-label="ব্রেডক্রাম্ব">
-          <Link href="/">প্রচ্ছদ</Link>
+        <nav className="crumbs" aria-label={isEn ? "Breadcrumb" : "ব্রেডক্রাম্ব"}>
+          <Link href="/">{isEn ? "Home" : "প্রচ্ছদ"}</Link>
           <span>›</span>
-          <Link href={`/category/${slugForCategory(post.category)}`}>{post.category}</Link>
+          <Link href={`/category/${slugForCategory(post.category, brand.key)}`}>{post.category}</Link>
           <span>›</span>
-          <span>খবর</span>
+          <span>{isEn ? "News" : "খবর"}</span>
         </nav>
 
         <span className="cat">{post.category}</span>
@@ -126,10 +128,10 @@ export default async function PostPage({ params }: { params: { id: string } }) {
 
         <div className="byline">
           <span>
-            ✍️ <b>নিজস্ব প্রতিবেদক</b>
+            ✍️ <b>{isEn ? "Staff reporter" : "নিজস্ব প্রতিবেদক"}</b>
           </span>
           <span>
-            🕐 {timeAgoBn(published)} ({dateBn(published)}, {timeBn(published)})
+            🕐 {timeAgoFor(brand.lang, published)} ({dateFor(brand.lang, published)}, {isEn ? timeEn(published) : timeBn(published)})
           </span>
         </div>
 
@@ -142,13 +144,15 @@ export default async function PostPage({ params }: { params: { id: string } }) {
 
         <div className="text">{post.body}</div>
 
-        <ShareButtons url={url} title={post.headline} />
+        <AdSlot slot="article" />
+
+        <ShareButtons url={url} title={post.headline} lang={brand.lang} />
 
         {(prev || next) && (
           <div className="prevnext">
             {prev ? (
               <Link href={`/post/${prev.id}`}>
-                <small>← আগের খবর</small>
+                <small>{isEn ? "← Previous news" : "← আগের খবর"}</small>
                 <b>{prev.headline}</b>
               </Link>
             ) : (
@@ -156,7 +160,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
             )}
             {next ? (
               <Link href={`/post/${next.id}`} style={{ textAlign: "right" }}>
-                <small>পরের খবর →</small>
+                <small>{isEn ? "Next news →" : "পরের খবর →"}</small>
                 <b>{next.headline}</b>
               </Link>
             ) : (
@@ -168,8 +172,8 @@ export default async function PostPage({ params }: { params: { id: string } }) {
         {related.length > 0 && (
           <section className="section">
             <div className="section-head">
-              <h2>আরও খবর</h2>
-              <Link href={`/category/${slugForCategory(post.category)}`}>সব {post.category} →</Link>
+              <h2>{isEn ? "More news" : "আরও খবর"}</h2>
+              <Link href={`/category/${slugForCategory(post.category, brand.key)}`}>{isEn ? `All ${post.category} →` : `সব ${post.category} →`}</Link>
             </div>
             <div className="grid">
               {related.map((p) => (
