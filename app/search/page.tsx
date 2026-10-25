@@ -7,7 +7,10 @@ import Sidebar from "@/components/Sidebar";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "খুঁজুন" };
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = getBrand();
+  return { title: brand.lang === "en" ? "Search" : "খুঁজুন" };
+}
 
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
 
@@ -23,6 +26,7 @@ export default async function SearchPage({
   searchParams: { q?: string };
 }) {
   const brand = getBrand();
+  const isEn = brand.lang === "en";
   const q = (searchParams.q || "").trim();
 
   let results: PostCardItem[] = [];
@@ -49,26 +53,30 @@ export default async function SearchPage({
   return (
     <div className="layout">
       <div>
-        <h1 style={{ margin: "0 0 6px", fontSize: 28 }}>খুঁজুন</h1>
+        <h1 style={{ margin: "0 0 6px", fontSize: 28 }}>{isEn ? "Search" : "খুঁজুন"}</h1>
         <form className="searchform" method="get" action="/search">
           <input
             type="search"
             name="q"
             defaultValue={q}
-            placeholder="যে খবর খুঁজছেন লিখুন…"
-            aria-label="খবর খুঁজুন"
+            placeholder={isEn ? "Search for news…" : "যে খবর খুঁজছেন লিখুন…"}
+            aria-label={isEn ? "Search news" : "খবর খুঁজুন"}
             autoFocus
           />
-          <button type="submit">খুঁজুন</button>
+          <button type="submit">{isEn ? "Search" : "খুঁজুন"}</button>
         </form>
 
         {q &&
           (results.length === 0 ? (
-            <p className="empty">“{q}” — কোনো খবর পাওয়া যায়নি। অন্য শব্দে চেষ্টা করুন।</p>
+            <p className="empty">
+              {isEn ? `No news found for “${q}”. Try another word.` : `“${q}” — কোনো খবর পাওয়া যায়নি। অন্য শব্দে চেষ্টা করুন।`}
+            </p>
           ) : (
             <>
               <p style={{ color: "var(--muted)" }}>
-                “{q}” — {results.length}টি ফলাফল
+                {isEn
+                  ? `“${q}” — ${results.length} ${results.length === 1 ? "result" : "results"}`
+                  : `“${q}” — ${results.length}টি ফলাফল`}
               </p>
               <div className="grid cols3">
                 {results.map((p) => (
