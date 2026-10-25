@@ -1,4 +1,5 @@
-// News portal — two-brand Bengali news sites (প্রথম প্রহর নিউজ / BTN News)
+// News portal — three-brand news sites (প্রথম প্রহর নিউজ / BTN News, Bengali;
+// South Asia Today, English)
 // Shares the Supabase project with protarok-check; tables are prefixed by
 // model name only (NewsPost / PostImage) and created via add_news_portal.sql.
 
@@ -12,7 +13,7 @@ datasource db {
 }
 
 /// One published news story on one brand's site.
-/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News)
+/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News) | "sat" (South Asia Today)
 model NewsPost {
   id          Int      @id @default(autoincrement())
   brand       String // pp | btn
@@ -39,7 +40,7 @@ model PostImage {
 }
 
 /// One browser Web Push subscription for one brand's site.
-/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News)
+/// brand: "pp" (প্রথম প্রহর নিউজ) | "btn" (BTN News) | "sat" (South Asia Today)
 model PushSubscription {
   id        Int      @id @default(autoincrement())
   brand     String // pp | btn
