@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { timeAgoBn } from "@/lib/format";
+import { getBrand } from "@/lib/brand";
+import { timeAgoFor } from "@/lib/format";
 
 export interface PostLite {
   id: number;
@@ -10,6 +11,7 @@ export interface PostLite {
 }
 
 export default function NewsCard({ post }: { post: PostLite }) {
+  const brand = getBrand();
   return (
     <article className="card">
       <Link href={`/post/${post.id}`} className="thumb" aria-label={post.headline}>
@@ -24,7 +26,7 @@ export default function NewsCard({ post }: { post: PostLite }) {
           <Link href={`/post/${post.id}`}>{post.headline}</Link>
         </h3>
         <div className="meta">
-          <span>🕐 {timeAgoBn(new Date(post.publishedAt))}</span>
+          <span>🕐 {timeAgoFor(brand.lang, new Date(post.publishedAt))}</span>
         </div>
       </div>
     </article>
