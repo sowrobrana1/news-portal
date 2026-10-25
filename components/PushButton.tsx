@@ -16,7 +16,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 
 type State = "idle" | "working" | "on" | "unsupported";
 
-export default function PushButton() {
+export default function PushButton({ lang = "bn" }: { lang?: "bn" | "en" }) {
+  const isEn = lang === "en";
   const [state, setState] = useState<State>("idle");
 
   useEffect(() => {
@@ -69,18 +70,26 @@ export default function PushButton() {
 
   const label =
     state === "on"
-      ? "✓ নোটিফিকেশন চালু আছে"
+      ? isEn
+        ? "✓ Notifications on"
+        : "✓ নোটিফিকেশন চালু আছে"
       : state === "unsupported"
-        ? "এই ব্রাউজারে হবে না"
+        ? isEn
+          ? "Not supported in this browser"
+          : "এই ব্রাউজারে হবে না"
         : state === "working"
-          ? "চালু হচ্ছে…"
-          : "🔔 নোটিফিকেশন চালু করুন";
+          ? isEn
+            ? "Turning on…"
+            : "চালু হচ্ছে…"
+          : isEn
+            ? "🔔 Turn on notifications"
+            : "🔔 নোটিফিকেশন চালু করুন";
 
   return (
     <button
       type="button"
       onClick={enable}
-      aria-label="পুশ নোটিফিকেশন চালু করুন"
+      aria-label={isEn ? "Turn on push notifications" : "পুশ নোটিফিকেশন চালু করুন"}
       style={{
         display: "inline-flex",
         alignItems: "center",
