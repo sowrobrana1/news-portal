@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getBrand } from "@/lib/brand";
-import { CATEGORIES } from "@/lib/categories";
-import { timeAgoBn } from "@/lib/format";
+import { activeCategoriesForBrand } from "@/lib/categories";
+import { timeAgoFor } from "@/lib/format";
 import NewsCard, { type PostLite } from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
 
@@ -20,12 +20,14 @@ const SELECT = {
 type PostRow = PostLite & { body: string };
 
 function excerpt(text: string, n = 160): string {
-  const clean = text.replace(/^বিস্তারিত:?\s*/, "").trim();
+  const clean = text.replace(/^(বিস্তারিত|Details):?\s*/, "").trim();
   return clean.length > n ? clean.slice(0, n) + "…" : clean;
 }
 
 export default async function HomePage() {
   const brand = getBrand();
+  const isEn = brand.lang === "en";
+  const CATEGORIES = activeCategoriesForBrand(brand.key);
   let posts: PostRow[] = [];
   try {
     posts = await prisma.newsPost.findMany({
@@ -42,7 +44,7 @@ export default async function HomePage() {
     return (
       <div className="empty">
         <h1>{brand.name}</h1>
-        <p>খুব শীঘ্রই এখানে খবর প্রকাশ শুরু হবে।</p>
+        <p>{isEn ? "News will be published here very soon." : "খুব শীঘ্রই এখানে খবর প্রকাশ শুরু হবে।"}</p>
       </div>
     );
   }
@@ -59,7 +61,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="hero" aria-label="শীর্ষ খবর">
+      <section className="hero" aria-label={isEn ? "Top story" : "শীর্ষ খবর"}>
         <article className="lead">
           <Link href={`/post/${lead.id}`} className="thumb">
             {lead.imageId ? (
@@ -74,7 +76,7 @@ export default async function HomePage() {
             </h1>
             <p>{excerpt(lead.body)}</p>
             <div className="meta" style={{ color: "var(--muted)", fontSize: 14, marginTop: 8 }}>
-              🕐 {timeAgoBn(new Date(lead.publishedAt))}
+              🕐 {timeAgoFor(brand.lang, new Date(lead.publishedAt))}
             </div>
           </div>
         </article>
@@ -92,7 +94,7 @@ export default async function HomePage() {
                   <Link href={`/post/${p.id}`}>{p.headline}</Link>
                 </h3>
                 <div className="meta" style={{ color: "var(--muted)", fontSize: 13 }}>
-                  {timeAgoBn(new Date(p.publishedAt))}
+                  {timeAgoFor(brand.lang, new Date(p.publishedAt))}
                 </div>
               </div>
             </article>
@@ -105,7 +107,7 @@ export default async function HomePage() {
           {/* ── Latest ── */}
           <section className="section" style={{ marginTop: 0 }}>
             <div className="section-head">
-              <h2>সর্বশেষ খবর</h2>
+              <h2>{isEn ? "Latest news" : "সর্বশেষ খবর"}</h2>
             </div>
             <div className="grid cols3">
               {rest.slice(0, 6).map((p) => (
@@ -119,7 +121,7 @@ export default async function HomePage() {
             <section className="section" key={cat.slug}>
               <div className="section-head">
                 <h2>{cat.name}</h2>
-                <Link href={`/category/${cat.slug}`}>আরও →</Link>
+                <Link href={`/category/${cat.slug}`}>{isEn ? "More →" : "আরও →"}</Link>
               </div>
               <div className="grid cols3">
                 {items.map((p) => (
