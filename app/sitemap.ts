@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { getBrand, getBaseUrl } from "@/lib/brand";
-import { CATEGORIES } from "@/lib/categories";
+import { activeCategoriesForBrand } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
-    ...CATEGORIES.map((c) => ({
+    ...activeCategoriesForBrand(brand.key).map((c) => ({
       url: `${BASE}/category/${c.slug}`,
       lastModified: now,
       changeFrequency: "hourly" as const,
