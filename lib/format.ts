@@ -36,6 +36,46 @@ export function timeBn(date: Date): string {
   });
 }
 
+// English equivalents for the sat (South Asia Today) brand. The Bengali
+// functions above are unchanged and still used by pp/btn.
+
+export function timeAgoEn(date: Date, now = new Date()): string {
+  const diffMs = now.getTime() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return dateEn(date);
+}
+
+export function dateEn(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    timeZone: "Asia/Dhaka",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function timeEn(date: Date): string {
+  return date.toLocaleTimeString("en-US", {
+    timeZone: "Asia/Dhaka",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function timeAgoFor(lang: "bn" | "en", date: Date): string {
+  return lang === "en" ? timeAgoEn(date) : timeAgoBn(date);
+}
+
+export function dateFor(lang: "bn" | "en", date: Date): string {
+  return lang === "en" ? dateEn(date) : dateBn(date);
+}
+
 export type PostCardItem = {
   id: number;
   headline: string;
