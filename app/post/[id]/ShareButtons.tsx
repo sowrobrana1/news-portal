@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function ShareButtons({ url, title }: { url: string; title: string }) {
+export default function ShareButtons({ url, title, lang = "bn" }: { url: string; title: string; lang?: "bn" | "en" }) {
   const [copied, setCopied] = useState(false);
   const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
   const wa = `https://wa.me/?text=${encodeURIComponent(title + " " + url)}`;
@@ -19,7 +19,7 @@ export default function ShareButtons({ url, title }: { url: string; title: strin
 
   return (
     <div className="sharebar">
-      <span>শেয়ার করুন:</span>
+      <span>{lang === "en" ? "Share:" : "শেয়ার করুন:"}</span>
       <a className="sharebtn fb" href={fb} target="_blank" rel="noreferrer">
         Facebook
       </a>
@@ -27,7 +27,7 @@ export default function ShareButtons({ url, title }: { url: string; title: strin
         WhatsApp
       </a>
       <button className="sharebtn" onClick={copy} type="button">
-        {copied ? "✓ কপি হয়েছে" : "🔗 লিংক কপি"}
+        {copied ? (lang === "en" ? "✓ Copied" : "✓ কপি হয়েছে") : (lang === "en" ? "🔗 Copy link" : "🔗 লিংক কপি")}
       </button>
     </div>
   );
