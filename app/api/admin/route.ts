@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { CATEGORIES, DEFAULT_CATEGORY } from "@/lib/categories";
+import { categoriesForBrand, defaultCategoryForBrand } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (b.action === "list") {
-      const brand = b.brand === "btn" ? "btn" : "pp";
+      const brand = b.brand === "btn" ? "btn" : b.brand === "sat" ? "sat" : "pp";
       const posts = await prisma.newsPost.findMany({
         where: { brand },
         orderBy: { publishedAt: "desc" },
@@ -55,15 +55,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (b.action === "create") {
-      const brand = b.brand === "btn" ? "btn" : "pp";
+      const brand = b.brand === "btn" ? "btn" : b.brand === "sat" ? "sat" : "pp";
       const headline = typeof b.headline === "string" ? b.headline.trim() : "";
       const body = typeof b.body === "string" ? b.body.trim() : "";
       if (!headline) {
         return NextResponse.json({ ok: false, error: "headline required" }, { status: 400 });
       }
-      const category = CATEGORIES.some((c) => c.name === b.category)
+      const category = categoriesForBrand(brand).some((c) => c.name === b.category)
         ? (b.category as string)
-        : DEFAULT_CATEGORY;
+        : defaultCategoryForBrand(brand);
 
       let imageId: number | null = null;
       if (typeof b.imageBase64 === "string" && b.imageBase64.length > 0) {
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (b.action === "stats") {
-      const brand = b.brand === "btn" ? "btn" : "pp";
+      const brand = b.brand === "btn" ? "btn" : b.brand === "sat" ? "sat" : "pp";
       const dayStr = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Dhaka",
         year: "numeric",
