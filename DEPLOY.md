@@ -87,6 +87,42 @@ seed script দিয়ে সর্বশেষ ৮টা করে প্র�
 এরপর থেকে Facebook পেজে পোস্ট হলেই সাইটেও অটো-পোস্ট হবে (pipeline-এ
 ingest যুক্ত হলে)।
 
+## Step 5 — তৃতীয় সাইট (South Asia Today, English) — sat
+
+আবার **Add New… → Project** → একই **news-portal** repo Import করো।
+
+Environment Variables — শুধু এগুলো বদলাবে / যোগ হবে:
+
+```
+NEXT_PUBLIC_BRAND
+```
+```
+sat
+```
+
+```
+NEXT_PUBLIC_BASE_URL
+```
+```
+https://<new-sat-vercel-project>.vercel.app
+```
+(প্রজেক্ট বানানোর পর আসল URL এখানে বসাতে হবে)
+
+```
+NEXT_PUBLIC_ADSTERRA_CODE
+```
+(ঐচ্ছিক, এখনই লাগবে না — Adsterra অ্যাকাউন্ট হলে তবেই বসাবে; না থাকলে
+সাইটে কোনো অ্যাড দেখাবে না, শুধু dev-এ placeholder দেখাবে)
+
+বাকিগুলো (DATABASE_URL, INGEST_KEY, ADMIN_PASSWORD) Step 2-এর মতোই।
+GA id আর Facebook পেজ এখনো নেই — সেগুলো পরে বসালে কোড বদলাতে হবে না,
+শুধু sat ব্র্যান্ডের gaId/fbPageUrl আপডেট করতে হবে। Search Console-এর
+token-ও sat-এর জন্য আলাদা করে নিতে হবে (layout-এ pp/btn-এর token reuse
+করা আছে, সেটা sat-এর property verify করবে না)।
+
+Ingest: `python3 ingest_item.py sat <published_folder>` — brand "sat",
+category "Bangladesh"/"India" (পরে Pakistan/Nepal/Sri Lanka)।
+
 ## পরে কাস্টম ডোমেইন
 
 পেজ ভাইরাল হলে ডোমেইন কিনে Vercel → Project → Settings → Domains থেকে
