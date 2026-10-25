@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getBrand } from "@/lib/brand";
-import { timeAgoBn } from "@/lib/format";
+import { timeAgoFor } from "@/lib/format";
 
 export default async function Sidebar() {
   const brand = getBrand();
@@ -32,26 +32,26 @@ export default async function Sidebar() {
   return (
     <aside>
       <div className="sidebox">
-        <h3>সর্বাধিক পঠিত</h3>
+        <h3>{brand.lang === "en" ? "Most read" : "সর্বাধিক পঠিত"}</h3>
         <ol className="ranklist">
           {mostRead.map((p) => (
             <li key={p.id}>
               <Link href={`/post/${p.id}`}>{p.headline}</Link>
             </li>
           ))}
-          {mostRead.length === 0 && <li>এখনো কোনো খবর নেই</li>}
+          {mostRead.length === 0 && <li>{brand.lang === "en" ? "No news yet" : "এখনো কোনো খবর নেই"}</li>}
         </ol>
       </div>
       <div className="sidebox">
-        <h3>সর্বশেষ</h3>
+        <h3>{brand.lang === "en" ? "Latest" : "সর্বশেষ"}</h3>
         <ul className="plainlist">
           {latest.map((p) => (
             <li key={p.id}>
               <Link href={`/post/${p.id}`}>{p.headline}</Link>
-              <span className="meta">{timeAgoBn(new Date(p.publishedAt))}</span>
+              <span className="meta">{timeAgoFor(brand.lang, new Date(p.publishedAt))}</span>
             </li>
           ))}
-          {latest.length === 0 && <li>এখনো কোনো খবর নেই</li>}
+          {latest.length === 0 && <li>{brand.lang === "en" ? "No news yet" : "এখনো কোনো খবর নেই"}</li>}
         </ul>
       </div>
     </aside>
