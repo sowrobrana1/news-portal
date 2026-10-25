@@ -3,6 +3,7 @@
    Brand themes switch via [data-brand] on <html>:
    pp  = প্রথম প্রহর নিউজ — dark masthead, red accent (card design V3)
    btn = BTN News — navy masthead, red breaking bar (card design v2)
+   sat = South Asia Today — deep-teal masthead, teal accent, English UI
 ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -27,6 +28,24 @@
   --accent-dark: #a8121a;
   --masthead-bg: #0a1e3c;
   --ticker-bg: #0a1e3c;
+}
+
+[data-brand="sat"] {
+  --accent: #0f766e;
+  --accent-dark: #115e59;
+  --masthead-bg: #0f2f2e;
+  --ticker-bg: #0f766e;
+}
+
+[data-brand="sat"] body {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.ad-slot { min-height: 0; }
+.ad-slot-placeholder {
+  border: 2px dashed #94a3b8; border-radius: 10px; color: #64748b;
+  text-align: center; font-size: 14px; padding: 18px 12px; margin: 16px auto;
+  max-width: var(--maxw);
 }
 
 * { box-sizing: border-box; }
