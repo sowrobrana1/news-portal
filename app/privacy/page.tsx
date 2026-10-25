@@ -1,10 +1,45 @@
 import type { Metadata } from "next";
 import { getBrand } from "@/lib/brand";
 
-export const metadata: Metadata = { title: "গোপনীয়তা নীতি" };
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = getBrand();
+  return { title: brand.lang === "en" ? "Privacy policy" : "গোপনীয়তা নীতি" };
+}
 
 export default function PrivacyPage() {
   const brand = getBrand();
+  if (brand.lang === "en") {
+    return (
+      <div className="prose">
+        <h1>Privacy policy</h1>
+        <p>
+          {brand.name} respects readers&apos; privacy. This page explains what information we collect
+          and how we use it.
+        </p>
+        <h2>What information we collect</h2>
+        <p>
+          You do not need an account or any personal information to read news on this website. We may
+          collect only anonymous statistics — for example, how many times a story has been read — to
+          understand readers&apos; interests.
+        </p>
+        <h2>Cookies</h2>
+        <p>
+          Browser cookies may be used for the normal functioning of the site and for statistics. If
+          advertising services are added in the future, the relevant provider (for example Google) may
+          use cookies under its own policy.
+        </p>
+        <h2>Third-party links</h2>
+        <p>
+          Stories may link to other websites. We are not responsible for the content or privacy
+          policies of those sites.
+        </p>
+        <h2>Changes</h2>
+        <p>
+          This policy may be updated when needed; any change will be announced on this page.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="prose">
       <h1>গোপনীয়তা নীতি</h1>
