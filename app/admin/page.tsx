@@ -19,6 +19,11 @@ interface Stats {
 }
 
 const CATS = ["জাতীয়", "রাজনীতি", "আন্তর্জাতিক", "খেলা", "বিনোদন", "অর্থনীতি", "প্রযুক্তি", "জেলা"];
+const CATS_BY_BRAND: Record<"pp" | "btn" | "sat", string[]> = {
+  pp: CATS,
+  btn: CATS,
+  sat: ["Bangladesh", "India", "Pakistan", "Nepal", "Sri Lanka"],
+};
 
 const BN = "০১২৩৪৫৬৭৮৯";
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => BN[Number(d)]);
@@ -26,7 +31,11 @@ const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => BN[Number(
 export default function AdminPage() {
   const [pw, setPw] = useState("");
   const [authed, setAuthed] = useState(false);
-  const [brand, setBrand] = useState<"pp" | "btn">("pp");
+  const [brand, setBrand] = useState<"pp" | "btn" | "sat">("pp");
+  // Admin UI language follows the brand being managed: sat is English,
+  // pp/btn stay Bangla. Headlines/bodies themselves are never translated.
+  const isSat = brand === "sat";
+  const num = (n: number | string) => (isSat ? String(n) : bn(n));
   const [rows, setRows] = useState<Row[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [msg, setMsg] = useState("");
@@ -51,7 +60,7 @@ export default function AdminPage() {
   }, []);
 
   const load = useCallback(
-    async (password: string, b: "pp" | "btn") => {
+    async (password: string, b: "pp" | "btn" | "sat") => {
       const r = await call({ action: "list", brand: b }, password);
       if (r.ok) {
         setRows(r.posts);
@@ -65,7 +74,9 @@ export default function AdminPage() {
         if (s.ok) setStats(s);
       } else {
         setAuthed(false);
-        setMsg("পাসওয়ার্ড মেলেনি। আবার চেষ্টা করুন।");
+        // Use the brand being loaded (b), not the state brand, which may
+        // not have updated yet when switching brands.
+        setMsg(b === "sat" ? "Password did not match. Try again." : "পাসওয়ার্ড মেলেনি। আবার চেষ্টা করুন।");
       }
     },
     [call]
@@ -81,10 +92,10 @@ export default function AdminPage() {
   }, []);
 
   async function del(id: number, headline: string) {
-    if (!confirm(`মুছে ফেলবেন?\n${headline}`)) return;
+    if (!confirm(isSat ? `Delete?\n${headline}` : `মুছে ফেলবেন?\n${headline}`)) return;
     const r = await call({ action: "delete", id }, pw);
     if (r.ok) load(pw, brand);
-    else setMsg("মুছতে সমস্যা হয়েছে।");
+    else setMsg(isSat ? "There was a problem deleting." : "মুছতে সমস্যা হয়েছে।");
   }
 
   function pickImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -95,7 +106,7 @@ export default function AdminPage() {
       return;
     }
     if (f.size > 3 * 1024 * 1024) {
-      setMsg("ছবি ৩ MB-এর বেশি বড়। ছোট ছবি দিন।");
+      setMsg(isSat ? "Image is larger than 3 MB. Please use a smaller image." : "ছবি ৩ MB-এর বেশি বড়। ছোট ছবি দিন।");
       return;
     }
     const reader = new FileReader();
@@ -112,7 +123,7 @@ export default function AdminPage() {
   async function createPost(e: React.FormEvent) {
     e.preventDefault();
     if (!headline.trim()) {
-      setMsg("শিরোনাম দিন।");
+      setMsg(isSat ? "Enter a headline." : "শিরোনাম দিন।");
       return;
     }
     setPosting(true);
@@ -126,22 +137,22 @@ export default function AdminPage() {
     const r = await call(payload, pw);
     setPosting(false);
     if (r.ok) {
-      setOkMsg(`পোস্ট হয়ে গেছে ✓ — /post/${r.id}`);
+      setOkMsg(isSat ? `Posted ✓ — /post/${r.id}` : `পোস্ট হয়ে গেছে ✓ — /post/${r.id}`);
       setHeadline("");
       setBody("");
       setImgB64("");
       setImgName("");
       load(pw, brand);
     } else {
-      setMsg("পোস্ট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      setMsg(isSat ? "There was a problem posting. Try again." : "পোস্ট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     }
   }
 
   if (!authed) {
     return (
       <div className="adminbox">
-        <h1>অ্যাডমিন</h1>
-        <p style={{ color: "var(--muted)" }}>চালিয়ে যেতে পাসওয়ার্ড দিন।</p>
+        <h1>{isSat ? "Admin" : "অ্যাডমিন"}</h1>
+        <p style={{ color: "var(--muted)" }}>{isSat ? "Enter your password to continue." : "চালিয়ে যেতে পাসওয়ার্ড দিন।"}</p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -153,11 +164,11 @@ export default function AdminPage() {
             type="password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            placeholder="পাসওয়ার্ড"
+            placeholder={isSat ? "Password" : "পাসওয়ার্ড"}
             autoFocus
           />
           <button className="btn" type="submit">
-            ঢুকুন
+            {isSat ? "Sign in" : "ঢুকুন"}
           </button>
         </form>
         {msg && <p style={{ color: "#c01616" }}>{msg}</p>}
@@ -167,7 +178,7 @@ export default function AdminPage() {
 
   return (
     <div className="adminbox" style={{ maxWidth: 960 }}>
-      <h1>খবর ব্যবস্থাপনা</h1>
+      <h1>{isSat ? "News management" : "খবর ব্যবস্থাপনা"}</h1>
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <button className={brand === "pp" ? "btn" : "btn ghost"} onClick={() => { setBrand("pp"); load(pw, "pp"); }}>
           প্রথম প্রহর নিউজ
@@ -175,36 +186,43 @@ export default function AdminPage() {
         <button className={brand === "btn" ? "btn" : "btn ghost"} onClick={() => { setBrand("btn"); load(pw, "btn"); }}>
           BTN News
         </button>
-        <span style={{ alignSelf: "center", color: "var(--muted)" }}>মোট {bn(rows.length)}টি খবর</span>
+        <button className={brand === "sat" ? "btn" : "btn ghost"} onClick={() => { setBrand("sat"); setCategory(CATS_BY_BRAND.sat[0]); load(pw, "sat"); }}>
+          South Asia Today
+        </button>
+        <span style={{ alignSelf: "center", color: "var(--muted)" }}>
+          {isSat ? `Total ${rows.length} news` : `মোট ${bn(rows.length)}টি খবর`}
+        </span>
       </div>
 
       {stats && (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
           <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.totalPosts)}</div>
-            <div style={{ color: "var(--muted)", fontSize: 13 }}>মোট খবর</div>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{num(stats.totalPosts)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>{isSat ? "Total news" : "মোট খবর"}</div>
           </div>
           <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.totalViews)}</div>
-            <div style={{ color: "var(--muted)", fontSize: 13 }}>মোট পঠিত (সব খবর মিলিয়ে)</div>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{num(stats.totalViews)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>{isSat ? "Total reads (all news)" : "মোট পঠিত (সব খবর মিলিয়ে)"}</div>
           </div>
           <div style={{ flex: "1 1 140px", border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{bn(stats.todayPosts)}</div>
-            <div style={{ color: "var(--muted)", fontSize: 13 }}>আজকের খবর</div>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{num(stats.todayPosts)}</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>{isSat ? "Today's news" : "আজকের খবর"}</div>
           </div>
         </div>
       )}
 
       {stats && stats.top.length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 17, margin: "0 0 8px" }}>সর্বাধিক পঠিত (শীর্ষ ৫)</h2>
+          <h2 style={{ fontSize: 17, margin: "0 0 8px" }}>{isSat ? "Most read (top 5)" : "সর্বাধিক পঠিত (শীর্ষ ৫)"}</h2>
           <ol style={{ margin: 0, paddingLeft: 22, lineHeight: 1.9 }}>
             {stats.top.map((t) => (
               <li key={t.id}>
                 <a href={`/post/${t.id}`} target="_blank" rel="noreferrer">
                   {t.headline}
                 </a>{" "}
-                <span style={{ color: "var(--muted)" }}>— {bn(t.views)} বার পঠিত</span>
+                <span style={{ color: "var(--muted)" }}>
+                  {isSat ? `— ${t.views} reads` : `— ${bn(t.views)} বার পঠিত`}
+                </span>
               </li>
             ))}
           </ol>
@@ -212,25 +230,25 @@ export default function AdminPage() {
       )}
 
       <div style={{ border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: "14px 16px", marginBottom: 22 }}>
-        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>নতুন পোস্ট করুন</h2>
+        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{isSat ? "Create a new post" : "নতুন পোস্ট করুন"}</h2>
         <form onSubmit={createPost} style={{ display: "grid", gap: 10 }}>
           <input
             type="text"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            placeholder="শিরোনাম"
+            placeholder={isSat ? "Headline" : "শিরোনাম"}
             style={{ width: "100%" }}
           />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              {CATS.map((c) => (
+              {CATS_BY_BRAND[brand].map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
             </select>
             <label style={{ alignSelf: "center" }}>
-              ছবি (ঐচ্ছিক):{" "}
+              {isSat ? "Image (optional):" : "ছবি (ঐচ্ছিক):"}{" "}
               <input type="file" accept="image/*" onChange={pickImage} />
               {imgName && <span style={{ color: "var(--muted)" }}> {imgName}</span>}
             </label>
@@ -238,16 +256,18 @@ export default function AdminPage() {
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="বিস্তারিত লিখুন…"
+            placeholder={isSat ? "Write the details…" : "বিস্তারিত লিখুন…"}
             rows={6}
             style={{ width: "100%" }}
           />
           <div>
             <button className="btn" type="submit" disabled={posting}>
-              {posting ? "পোস্ট হচ্ছে…" : "পোস্ট করুন"}
+              {posting ? (isSat ? "Posting…" : "পোস্ট হচ্ছে…") : isSat ? "Post" : "পোস্ট করুন"}
             </button>
             <span style={{ marginLeft: 10, color: "var(--muted)", fontSize: 13 }}>
-              পোস্ট যাবে: {brand === "pp" ? "প্রথম প্রহর নিউজ" : "BTN News"} সাইটে
+              {isSat ? "Will post to: " : "পোস্ট যাবে: "}
+              {brand === "pp" ? "প্রথম প্রহর নিউজ" : brand === "btn" ? "BTN News" : "South Asia Today"}
+              {isSat ? " site" : " সাইটে"}
             </span>
           </div>
         </form>
@@ -260,30 +280,30 @@ export default function AdminPage() {
           <thead>
             <tr>
               <th>#</th>
-              <th>শিরোনাম</th>
-              <th>বিভাগ</th>
-              <th>পঠিত</th>
-              <th>সময়</th>
+              <th>{isSat ? "Headline" : "শিরোনাম"}</th>
+              <th>{isSat ? "Category" : "বিভাগ"}</th>
+              <th>{isSat ? "Reads" : "পঠিত"}</th>
+              <th>{isSat ? "Time" : "সময়"}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>{bn(r.id)}</td>
+                <td>{num(r.id)}</td>
                 <td>
                   <a href={`/post/${r.id}`} target="_blank" rel="noreferrer">
                     {r.headline}
                   </a>
                 </td>
                 <td>{r.category}</td>
-                <td>{bn(r.views)}</td>
+                <td>{num(r.views)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
-                  {new Date(r.publishedAt).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
+                  {new Date(r.publishedAt).toLocaleDateString(isSat ? "en-US" : "bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
                 </td>
                 <td>
                   <button className="btn danger" onClick={() => del(r.id, r.headline)}>
-                    মুছুন
+                    {isSat ? "Delete" : "মুছুন"}
                   </button>
                 </td>
               </tr>
@@ -291,7 +311,7 @@ export default function AdminPage() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={6} className="empty">
-                  কোনো খবর নেই
+                  {isSat ? "No news yet" : "কোনো খবর নেই"}
                 </td>
               </tr>
             )}
