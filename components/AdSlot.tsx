@@ -4,7 +4,7 @@
 // deployment (NEXT_PUBLIC_BRAND) — never cross-served:
 //   sat: south-asia-today.vercel.app, key 08765e663e0a041cbb22e95c17a280fc
 //   pp:  prothom-prohor-news.vercel.app, key ee6ae52e3d9f773f1b4a29637e1b5ae3
-//   btn: btn-news-bangla.vercel.app — unit not yet issued, renders nothing.
+//   btn: btn-news-bangla.vercel.app, key 2df0d297296eabcde005d5decbb70f92
 //
 // Slots: "header" (below the masthead, used in layout) and "article"
 // (inside article pages, after the body text).
@@ -18,6 +18,7 @@ export type AdSlotName = "header" | "article";
 const ADSTERRA_KEYS: Record<string, string> = {
   sat: "08765e663e0a041cbb22e95c17a280fc",
   pp: "ee6ae52e3d9f773f1b4a29637e1b5ae3",
+  btn: "2df0d297296eabcde005d5decbb70f92",
 };
 
 export default function AdSlot({ slot }: { slot: AdSlotName }) {
