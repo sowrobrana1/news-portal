@@ -28,14 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: brand.name,
     },
     // Google Search Console ownership verification. Google issued the same
-    // token for both pp/btn properties (same account) — value kept for
-    // both brands, unchanged.
-    // NOTE: this token is pp/btn's; sat needs its own Search Console token
-    // before claiming the sat property (follow-up, do not reuse blindly).
-    // Sat therefore serves NO verification token until one is issued for it.
-    ...(brand.key === "sat"
-      ? {}
-      : { verification: { google: "R6oj57uHxgAtAsGjAdqpzDibrLOnYhIVtBf_gWmi1fQ" } }),
+    // token for the same account's properties, and the user confirmed the
+    // sat property shows this token too (2026-10-26) — so it is served for
+    // all three brands, including sat.
+    verification: { google: "R6oj57uHxgAtAsGjAdqpzDibrLOnYhIVtBf_gWmi1fQ" },
   };
 }
 
