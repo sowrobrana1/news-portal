@@ -1,10 +1,10 @@
-// Adsterra banner ad slot (South Asia Today monetization).
+// Adsterra banner ad slots (one approved unit per site).
 //
-// The approved Adsterra banner unit for south-asia-today.vercel.app
-// (300x250, key 08765e663e0a041cbb22e95c17a280fc) is injected here.
-// Brand-gated: it renders ONLY on the sat deployment
-// (NEXT_PUBLIC_BRAND=sat), so the PP and BTN sites sharing this
-// codebase never serve this unit.
+// Approved 300x250 banner units, each rendered ONLY on its own brand's
+// deployment (NEXT_PUBLIC_BRAND) — never cross-served:
+//   sat: south-asia-today.vercel.app, key 08765e663e0a041cbb22e95c17a280fc
+//   pp:  prothom-prohor-news.vercel.app, key ee6ae52e3d9f773f1b4a29637e1b5ae3
+//   btn: btn-news-bangla.vercel.app — unit not yet issued, renders nothing.
 //
 // Slots: "header" (below the masthead, used in layout) and "article"
 // (inside article pages, after the body text).
@@ -15,28 +15,32 @@ import { useEffect, useRef } from "react";
 
 export type AdSlotName = "header" | "article";
 
-const ADSTERRA_KEY = "08765e663e0a041cbb22e95c17a280fc";
+const ADSTERRA_KEYS: Record<string, string> = {
+  sat: "08765e663e0a041cbb22e95c17a280fc",
+  pp: "ee6ae52e3d9f773f1b4a29637e1b5ae3",
+};
 
 export default function AdSlot({ slot }: { slot: AdSlotName }) {
   const ref = useRef<HTMLDivElement>(null);
   const brand = (process.env.NEXT_PUBLIC_BRAND || "pp").toLowerCase();
+  const key = ADSTERRA_KEYS[brand];
 
   useEffect(() => {
-    if (brand !== "sat" || !ref.current) return;
+    if (!key || !ref.current) return;
     const container = ref.current;
     const config = document.createElement("script");
-    config.text = `atOptions = { 'key' : '${ADSTERRA_KEY}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };`;
+    config.text = `atOptions = { 'key' : '${key}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };`;
     const invoke = document.createElement("script");
-    invoke.src = `https://bauval.org/22/${ADSTERRA_KEY}`;
+    invoke.src = `https://bauval.org/22/${key}`;
     invoke.async = true;
     container.appendChild(config);
     container.appendChild(invoke);
     return () => {
       container.innerHTML = "";
     };
-  }, [brand]);
+  }, [brand, key]);
 
-  if (brand !== "sat") return null;
+  if (!key) return null;
   return (
     <div
       ref={ref}
